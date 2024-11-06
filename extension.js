@@ -30,6 +30,7 @@ const IndicatorInstance = GObject.registerClass(Indicator);
 
 export default class NextUpExtension extends Extension {
   enable() {
+    this.isEnabled = true;
     this._indicator = new IndicatorInstance({
       confettiGicon: Gio.icon_new_for_string(
         this.path + "/assets/party-popper.png"
@@ -102,15 +103,21 @@ export default class NextUpExtension extends Extension {
     const text = DateHelperFunctions.eventStatusToIndicatorText(eventStatus);
 
     if (eventStatus.currentEvent === null && eventStatus.nextEvent === null) {
-      this._indicator.showConfettiIcon();
-    } else {
+      this._indicator.container.hide()
+      this.isEnabled = false;
+    } else if (!this.isEnabled) {
+      this._indicator.container.show()
+      this.isEnabled = true;
       this._indicator.showAlarmIcon();
     }
 
-    this._indicator.setText(text);
+    if (this.isEnabled) {
+      this._indicator.setText(text);
+    }
   }
 
   disable() {
+    this.isEnabled = false;
     Main.panel._centerBox.remove_child(this._indicator.container);
 
     this._settings.disconnect(this._settingChangedSignal);
